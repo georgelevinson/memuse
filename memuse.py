@@ -1,8 +1,8 @@
 import os
 import re
-import typing
 import xlsxwriter
 
+from typing import List, Dict
 from pathlib import Path
 from string import Template
 
@@ -160,22 +160,56 @@ class MemoryUsedByModuleAnalyzer:
         raw_data = [self.__get_data(path, module_name) for path in projects]
         filtered_data = list(filter(None, raw_data))
 
-        print('execution complete')
-        # [self.results_file.write(entry) for entry in filtered_map_data]
-        # [self.results_file.write(entry) for entry in filtered_lst_data]
-
         return filtered_data
+
+class MemuseReportCreator:
+
+    def __init__(self, out_dir : str, file_name : str) -> None:
+        self.workbook = xlsxwriter.Workbook(out_dir + file_name)
+
+
+    def __del__(self) -> None:
+        self.workbook.close()
+
+    
+    def report(self, data : List[Dict[str, str]]) -> None:
+        worksheet = self.workbook.add_worksheet(data[0]['module_name'])
+
+        row = 1
+        col = 1
+
+        for key in data[0]:
+            worksheet.write(row, col, key)
+            col += 1
+
+        row = 2
+        col = 1
+
+        for dp in data:
+            for key in dp:
+                try:
+                    worksheet.write(row, col, dp[key])
+                    col += 1
+                except Exception:
+                    col += 1
+                    continue
+            col = 1
+            row += 1
+        row = 2
 
 
 analyzer = MemoryUsedByModuleAnalyzer(device1_out)
+report_creator = MemuseReportCreator(device1_out, 'temp_mem_use_report.xlsx')
 
 temp_by_status = analyzer.analyze("Temp_MesureByStatus")
 temp_by_period = analyzer.analyze("Temp_MesureSomePeriod")
 temp_ws_family = analyzer.analyze("WS_Family_Temperature")
 
+[report_creator.report(data_array) for data_array in [temp_by_period, temp_by_status, temp_ws_family]]
 # [self.results_file.write(entry) for entry in filtered_map_data]
 # [self.results_file.write(entry) for entry in filtered_lst_data]
 
 del analyzer
+del report_creator
 
 print("end of execution")
