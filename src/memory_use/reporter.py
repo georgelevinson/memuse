@@ -6,7 +6,7 @@ class MemoryUseReportCreator:
     def __init__(self, out_dir : str, file_name : str) -> None:
         self.workbook = xlsxwriter.Workbook(out_dir + file_name)
 
-
+    
     def __del__(self) -> None:
         self.workbook.close()
 

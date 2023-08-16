@@ -7,15 +7,15 @@ from memory_use import MemoryUseReportCreator
 # string constants
 
 # default parameter values
-temp_mods = ["Temp_MesureByStatus", "Temp_MesureSomePeriod", "WS_Family_Temperature"]
+temp_mods = ["crc32", "Temp_MesureSomePeriod", "WS_Family_Temperature"]
 default_out_path = '/mnt/c/Users/user/Source/device1/Project_Output/'
-default_report_name = 'mem_use_report'
+default_report_name = 'crc_debug_report'
 report_file_extension = '.xlsx'
 
 # messages and message templates
-welcome_desc_message = '\n\rwelcome to memuse, this utility will help you analyze memory requirements that various modules (files) incur on every project in the repo\n\r'
-curr_args_message_template = Template('\n\rmemuse is running with the following parameter values:\n\r\n\r    proj output path:           $opath\n\r    modules analyzed:           $modules\n\r    report file name:           $rname\n\r')
-continue_message = '\n\rwould you like to continue execution with current parameters? y/n\n\r(run with -h flag for parameters format)'
+welcome_desc_message = '\n\rWelcome to memuse, this utility will help you analyze memory requirements that various modules (files) incur on every project in the repo\n\r'
+curr_args_message_template = Template('\n\rMemuse is running with the following parameter values:\n\r\n\r    proj output path:           $opath\n\r    modules analyzed:           $modules\n\r    report file name:           $rname\n\r')
+continue_message = '\n\rWould you like to continue execution with current parameters? y/n\n\r(run with -h flag for parameters format)'
 
 def main():
     # accept and parse command line args
