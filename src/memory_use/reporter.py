@@ -6,12 +6,16 @@ class MemoryUseReportCreator:
     def __init__(self, out_dir : str, file_name : str) -> None:
         self.workbook = xlsxwriter.Workbook(out_dir + file_name)
 
-    
+
     def __del__(self) -> None:
         self.workbook.close()
 
     
     def report(self, data : List[Dict[str, str]]) -> None:
+        if(len(data) == 0):
+            print("\n\rNo data to report!\n\r")
+            return
+
         worksheet = self.workbook.add_worksheet(data[0]['module_name'])
 
         row = 1

@@ -7,9 +7,9 @@ from memory_use import MemoryUseReportCreator
 # string constants
 
 # default parameter values
-temp_mods = ["crc32", "Temp_MesureSomePeriod", "WS_Family_Temperature"]
+temp_mods = ["Temp_MesureByStatus", "Temp_MesureSomePeriod", "WS_Family_Temperature", "Temp_MesureSomePeriodMultyTry"]
 default_out_path = '/mnt/c/Users/user/Source/device1/Project_Output/'
-default_report_name = 'crc_debug_report'
+default_report_name = 'temperature'
 report_file_extension = '.xlsx'
 
 # messages and message templates

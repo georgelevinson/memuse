@@ -89,23 +89,19 @@ class MemoryUsedByModuleAnalyzer:
 
     # Given a path to project's output folder and a module name, finds .lst and .map files if present
     # Using __parse_xxx_data methods extracts data about module's RAM/FLASH memory requirements in a given project
-    def __get_data(self, proj_path : str, module_name : str) -> dict:
+    def __get_proj_data(self, proj_path : str, module_name : str) -> dict:
         
-        # finds .map file of the project in proj_path
-        map = [f for f in os.listdir(proj_path) if f.endswith(".map")] 
-        if not map:
-            print(f"No .map files found in directory {proj_path}.")
-            return
-        if len(map) > 1:
-            print(f"Multiple .map files found in directory {proj_path}.")
+        # collects paths to every file in the proj_path directory including files in nested directories
+        map = ''
+        lst = ''
 
-        # finds .lst of module module_name in proj_path
-        lst = [f for f in os.listdir(proj_path) if f.endswith(module_name + '.lst')]
-        if not lst:
-            print(f"{module_name + '.lst'} not found in directory {proj_path}.")
-            return
-        if len(lst) > 1:
-            print(f"Multiple .lst files found in directory {proj_path}.")
+        # walks dir and finds .lst of module and .map of proj
+        for root, dir, files in os.walk(proj_path):
+            for name in files:
+                if(name.endswith(".map")):
+                    map = os.path.join(root, name)
+                if(name.endswith(module_name + ".lst")):
+                    lst = os.path.join(root, name)
 
         results = dict(project = self.__extract_projname(proj_path), 
                        module_name = module_name, 
@@ -117,50 +113,56 @@ class MemoryUsedByModuleAnalyzer:
                        lst_data = '',
                        decoding_err = [])
 
-        # open .map file
-        mapfile = open(proj_path + '/' + map[0], 'r')
-        indents = ''
-        # walk through and extract needed data
-        while True:
-            try:
-                line = mapfile.readline()
-            except UnicodeDecodeError as e:
-                results['decoding_err'].append(e)
-                continue
+        if map:
+            # open .map file
+            mapfile = open(map, 'r')
+            indents = ''
+            # walk through and extract needed data
+            while True:
+                try:
+                    line = mapfile.readline()
+                except UnicodeDecodeError as e:
+                    results['decoding_err'].append(e)
+                    continue
 
-            if not line:
-                break
-            if line.lstrip().startswith('Module') and 'ro code' in line:
-                indents += line
-            if line.lstrip().startswith(module_name):
-                self.__parse_map_data(results, line, indents)
-                break
-        # work with file complete
-        mapfile.close()
+                if not line:
+                    break
+                if line.lstrip().startswith('Module') and 'ro code' in line:
+                    indents += line
+                if line.lstrip().startswith(module_name + '.o'):
+                    self.__parse_map_data(results, line, indents)
+                    break
+            # work with file complete
+            mapfile.close()
+        else:
+            print(f"{results['project'] + '.map'} not found in directory {proj_path}.")
 
-        # open .lst file
-        lstfile = open(proj_path + '/' + lst[0], 'r')
-        write = False
-        #walk through and extract needed data
-        while True:
-            try:
-                line = lstfile.readline()
-            except UnicodeDecodeError as e:
-                results['decoding_err'].append(e)
-                continue
-            
-            if not line:
-                self.__parse_lst_data(results)
-                break
-            if write:
-                results['lst_data'] += line
-            if line.endswith('sizes:\n'):
-                write = True
-        # work with file complete
-        lstfile.close()
+        
+        if lst:
+            # open .lst file
+            lstfile = open(lst, 'r')
+            write = False
+            #walk through and extract needed data
+            while True:
+                try:
+                    line = lstfile.readline()
+                except UnicodeDecodeError as e:
+                    results['decoding_err'].append(e)
+                    continue
+                
+                if not line:
+                    self.__parse_lst_data(results)
+                    break
+                if write:
+                    results['lst_data'] += line
+                if line.endswith('sizes:\n'):
+                    write = True
+            # work with file complete
+            lstfile.close()
+        else:
+            print(f"{module_name + '.lst'} not found in directory {proj_path}.")
 
         # join all the data on errors into a single string such that it can later be written to .xlsx report
-
         errors = [error.reason for error in results['decoding_err']]
         results['decoding_err'] = ', '.join(errors)
 
@@ -171,7 +173,7 @@ class MemoryUsedByModuleAnalyzer:
 
         projects = [self.out_dir + f.name + "/List/" for f in os.scandir(path = self.out_dir) if f.is_dir()]
 
-        raw_data = [self.__get_data(path, module_name) for path in projects]
+        raw_data = [self.__get_proj_data(path, module_name) for path in projects]
         filtered_data = list(filter(None, raw_data))
 
         return filtered_data
